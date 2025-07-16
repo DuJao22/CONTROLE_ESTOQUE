@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Retiradas - Sistema de Controle de Estoque{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <h2 class="text-3xl font-bold text-gray-800">Histórico de Retiradas</h2>
+
+    <!-- HISTÓRICO BELO HORIZONTE -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-2xl font-bold text-blue-800 mb-4 border-b border-blue-200 pb-2">
+            🏥 Retiradas - Belo Horizonte
+        </h3>
+
+        {% if retiradas_bh %}
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300">
+                <thead class="bg-blue-50">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Data/Hora</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Produto</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Quantidade</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Funcionário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for retirada in retiradas_bh %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-2 text-sm">
+                            {{ retirada.data_retirada.strftime('%d/%m/%Y %H:%M') if retirada.data_retirada else '-' }}
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2 font-medium">{{ retirada.produto_nome }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ retirada.quantidade }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ retirada.usuario_nome }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">Nenhuma retirada registrada para BH ainda.</p>
+        {% endif %}
+    </div>
+
+    <!-- HISTÓRICO CONTAGEM -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-2xl font-bold text-green-800 mb-4 border-b border-green-200 pb-2">
+            🏥 Retiradas - Contagem
+        </h3>
+
+        {% if retiradas_contagem %}
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300">
+                <thead class="bg-green-50">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Data/Hora</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Produto</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Quantidade</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Funcionário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for retirada in retiradas_contagem %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-2 text-sm">
+                            {{ retirada.data_retirada.strftime('%d/%m/%Y %H:%M') if retirada.data_retirada else '-' }}
+                        </td>
+                        <td class="border border-gray-300 px-4 py-2 font-medium">{{ retirada.produto_nome }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ retirada.quantidade }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ retirada.usuario_nome }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">Nenhuma retirada registrada para Contagem ainda.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-blue-50 rounded-lg p-4">
+        <h3 class="font-medium text-blue-800 mb-2">Informações:</h3>
+        <ul class="text-sm text-blue-700 space-y-1">
+            <li>• Exibindo as últimas 50 retiradas de cada clínica</li>
+            <li>• Todas as retiradas são registradas com data, hora e responsável</li>
+            <li>• Use este histórico para controle e auditoria do estoque</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

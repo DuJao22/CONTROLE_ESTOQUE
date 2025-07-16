@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Controle de Estoque - Clínicas{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Sistema de Controle de Estoque - Clínicas</h1>
+                {% if session.usuario_nome %}
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">
+                        Olá, {{ session.usuario_nome }}
+                        {% if session.tipo == 'admin' %}
+                        <span class="bg-yellow-500 text-black px-2 py-1 rounded text-xs ml-1">Admin</span>
+                        {% else %}
+                        <span class="bg-green-500 text-white px-2 py-1 rounded text-xs ml-1">{{ session.clinica }}</span>
+                        {% endif %}
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition-colors">
+                        Sair
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    {% if session.usuario_nome %}
+    <nav class="bg-blue-500 text-white">
+        <div class="container mx-auto px-4 py-2">
+            <div class="flex space-x-4">
+                {% if session.tipo == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="hover:bg-blue-600 px-3 py-2 rounded transition-colors">Dashboard</a>
+                <a href="{{ url_for('cadastro_produto') }}" class="hover:bg-blue-600 px-3 py-2 rounded transition-colors">Cadastrar Produto</a>
+                <a href="{{ url_for('historico_retiradas') }}" class="hover:bg-blue-600 px-3 py-2 rounded transition-colors">Histórico de Retiradas</a>
+                {% else %}
+                <a href="{{ url_for('func_dashboard') }}" class="hover:bg-blue-600 px-3 py-2 rounded transition-colors">Dashboard - {{ session.clinica }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container mx-auto px-4 py-4">
+            {% for category, message in messages %}
+            <div class="{% if category == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded mb-4">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 py-4 text-center">
+            <p>&copy; 2024 Sistema de Controle de Estoque - Clínicas. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>

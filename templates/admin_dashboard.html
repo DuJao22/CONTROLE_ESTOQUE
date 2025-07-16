@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Admin - Sistema de Controle de Estoque{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <h2 class="text-3xl font-bold text-gray-800">Dashboard do Administrador</h2>
+        <a href="{{ url_for('cadastro_produto') }}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+            + Cadastrar Produto
+        </a>
+    </div>
+
+    <!-- CLÍNICA BELO HORIZONTE -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-2xl font-bold text-blue-800 mb-4 border-b border-blue-200 pb-2">
+            🏥 Clínica Belo Horizonte
+        </h3>
+
+        <!-- Produtos com Baixo Estoque BH -->
+        {% if produtos_bh_baixo %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h4 class="text-lg font-semibold text-red-800 mb-3">
+                ⚠️ Produtos com Estoque Baixo - BH ({{ produtos_bh_baixo|length }})
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for produto in produtos_bh_baixo %}
+                <div class="bg-white border border-red-300 rounded-lg p-3">
+                    <h5 class="font-medium text-red-900">{{ produto.nome }}</h5>
+                    <p class="text-sm text-red-700">
+                        Atual: {{ produto.quantidade_atual }} | Mínimo: {{ produto.quantidade_minima }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Lista de Produtos BH -->
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-3">Todos os Produtos - BH ({{ produtos_bh|length }})</h4>
+            
+            {% if produtos_bh %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead class="bg-blue-50">
+                        <tr>
+                            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Nome</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Descrição</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Qtd. Atual</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Qtd. Mínima</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos_bh %}
+                        <tr class="{% if produto.quantidade_atual <= produto.quantidade_minima %}bg-red-50{% else %}hover:bg-gray-50{% endif %}">
+                            <td class="border border-gray-300 px-4 py-2 font-medium">{{ produto.nome }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-gray-600">{{ produto.descricao or '-' }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ produto.quantidade_atual }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ produto.quantidade_minima }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {% if produto.quantidade_atual <= produto.quantidade_minima %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Baixo</span>
+                                {% elif produto.quantidade_atual <= produto.quantidade_minima * 2 %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Médio</span>
+                                {% else %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">Nenhum produto cadastrado para BH ainda.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CLÍNICA CONTAGEM -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-2xl font-bold text-green-800 mb-4 border-b border-green-200 pb-2">
+            🏥 Clínica Contagem
+        </h3>
+
+        <!-- Produtos com Baixo Estoque Contagem -->
+        {% if produtos_contagem_baixo %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h4 class="text-lg font-semibold text-red-800 mb-3">
+                ⚠️ Produtos com Estoque Baixo - Contagem ({{ produtos_contagem_baixo|length }})
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for produto in produtos_contagem_baixo %}
+                <div class="bg-white border border-red-300 rounded-lg p-3">
+                    <h5 class="font-medium text-red-900">{{ produto.nome }}</h5>
+                    <p class="text-sm text-red-700">
+                        Atual: {{ produto.quantidade_atual }} | Mínimo: {{ produto.quantidade_minima }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Lista de Produtos Contagem -->
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-3">Todos os Produtos - Contagem ({{ produtos_contagem|length }})</h4>
+            
+            {% if produtos_contagem %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead class="bg-green-50">
+                        <tr>
+                            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Nome</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Descrição</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Qtd. Atual</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Qtd. Mínima</th>
+                            <th class="border border-gray-300 px-4 py-2 text-center font-medium text-gray-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos_contagem %}
+                        <tr class="{% if produto.quantidade_atual <= produto.quantidade_minima %}bg-red-50{% else %}hover:bg-gray-50{% endif %}">
+                            <td class="border border-gray-300 px-4 py-2 font-medium">{{ produto.nome }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-gray-600">{{ produto.descricao or '-' }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ produto.quantidade_atual }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ produto.quantidade_minima }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {% if produto.quantidade_atual <= produto.quantidade_minima %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Baixo</span>
+                                {% elif produto.quantidade_atual <= produto.quantidade_minima * 2 %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Médio</span>
+                                {% else %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">Nenhum produto cadastrado para Contagem ainda.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
