@@ -1,4 +1,5 @@
 import sqlite3
+import sqlitecloud  # biblioteca do SQLiteCloud
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from datetime import datetime
 import os
@@ -6,13 +7,14 @@ import os
 app = Flask(__name__)
 app.secret_key = 'controle_estoque_clinicas_2024'
 
-# Configuração do banco de dados
-DATABASE = 'estoque.db'
+# URL do SQLiteCloud
+DATABASE_URL = 'sqlitecloud://cmq6frwshz.g4.sqlite.cloud:8860/estoque.db?apikey=Dor8OwUECYmrbcS5vWfsdGpjCpdm9ecSDJtywgvRw8k'
 
+# Função para conectar ao SQLiteCloud
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlitecloud.connect(DATABASE_URL)
         db.row_factory = sqlite3.Row
     return db
 
@@ -31,8 +33,8 @@ def init_db():
                 nome TEXT NOT NULL,
                 login TEXT UNIQUE NOT NULL,
                 senha TEXT NOT NULL,
-                tipo TEXT NOT NULL, -- 'admin' ou 'funcionario'
-                clinica TEXT -- 'BH', 'Contagem' ou NULL para admin
+                tipo TEXT NOT NULL,
+                clinica TEXT
             );
             
             CREATE TABLE IF NOT EXISTS produtos (
@@ -41,7 +43,7 @@ def init_db():
                 descricao TEXT,
                 quantidade_atual INTEGER DEFAULT 0,
                 quantidade_minima INTEGER DEFAULT 0,
-                clinica TEXT NOT NULL, -- 'BH' ou 'Contagem'
+                clinica TEXT NOT NULL,
                 data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             
@@ -55,8 +57,7 @@ def init_db():
                 data_retirada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (produto_id) REFERENCES produtos (id)
             );
-            
-            -- Inserir usuários padrão se não existirem
+
             INSERT OR IGNORE INTO usuarios (nome, login, senha, tipo, clinica) VALUES
             ('Administrador', 'admin', 'admin123', 'admin', NULL),
             ('Funcionário BH', 'funcbh', 'func123', 'funcionario', 'BH'),
@@ -110,16 +111,12 @@ def admin_dashboard():
         return redirect(url_for('login'))
     
     db = get_db()
-    
-    # Produtos BH
     produtos_bh = db.execute(
         'SELECT * FROM produtos WHERE clinica = "BH" ORDER BY nome'
     ).fetchall()
     produtos_bh_baixo = db.execute(
         'SELECT * FROM produtos WHERE clinica = "BH" AND quantidade_atual <= quantidade_minima ORDER BY nome'
     ).fetchall()
-    
-    # Produtos Contagem
     produtos_contagem = db.execute(
         'SELECT * FROM produtos WHERE clinica = "Contagem" ORDER BY nome'
     ).fetchall()
@@ -199,11 +196,9 @@ def retirar_produto(produto_id):
         
         nova_quantidade = produto['quantidade_atual'] - quantidade_retirada
         
-        # Atualizar estoque
         db.execute('UPDATE produtos SET quantidade_atual = ? WHERE id = ?', 
                   (nova_quantidade, produto_id))
         
-        # Registrar retirada
         db.execute('''
             INSERT INTO retiradas (produto_id, produto_nome, quantidade, usuario_nome, clinica)
             VALUES (?, ?, ?, ?, ?)
@@ -223,8 +218,6 @@ def historico_retiradas():
         return redirect(url_for('login'))
     
     db = get_db()
-    
-    # Retiradas BH
     retiradas_bh = db.execute('''
         SELECT * FROM retiradas 
         WHERE clinica = "BH" 
@@ -232,7 +225,6 @@ def historico_retiradas():
         LIMIT 50
     ''').fetchall()
     
-    # Retiradas Contagem
     retiradas_contagem = db.execute('''
         SELECT * FROM retiradas 
         WHERE clinica = "Contagem" 
