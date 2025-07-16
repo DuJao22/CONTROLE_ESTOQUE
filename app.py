@@ -10,12 +10,16 @@ app.secret_key = 'controle_estoque_clinicas_2024'
 # URL do SQLiteCloud
 DATABASE_URL = 'sqlitecloud://cmq6frwshz.g4.sqlite.cloud:8860/estoque.db?apikey=Dor8OwUECYmrbcS5vWfsdGpjCpdm9ecSDJtywgvRw8k'
 
+# Função personalizada para retornar linhas como dicionário
+def dict_factory(cursor, row):
+    return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
+
 # Função para conectar ao SQLiteCloud
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlitecloud.connect(DATABASE_URL)
-        db.row_factory = sqlite3.Row
+        db.row_factory = dict_factory
     return db
 
 @app.teardown_appcontext
@@ -79,13 +83,13 @@ def login():
     if request.method == 'POST':
         login_usuario = request.form['login']
         senha = request.form['senha']
-        
+
         db = get_db()
         usuario = db.execute(
             'SELECT * FROM usuarios WHERE login = ? AND senha = ?',
             (login_usuario, senha)
         ).fetchone()
-        
+
         if usuario:
             session['usuario_id'] = usuario['id']
             session['usuario_nome'] = usuario['nome']
@@ -95,7 +99,7 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Login ou senha inválidos!', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -109,7 +113,7 @@ def admin_dashboard():
     if 'usuario_id' not in session or session['tipo'] != 'admin':
         flash('Acesso negado!', 'error')
         return redirect(url_for('login'))
-    
+
     db = get_db()
     produtos_bh = db.execute(
         'SELECT * FROM produtos WHERE clinica = "BH" ORDER BY nome'
@@ -123,7 +127,7 @@ def admin_dashboard():
     produtos_contagem_baixo = db.execute(
         'SELECT * FROM produtos WHERE clinica = "Contagem" AND quantidade_atual <= quantidade_minima ORDER BY nome'
     ).fetchall()
-    
+
     return render_template('admin_dashboard.html', 
                          produtos_bh=produtos_bh,
                          produtos_bh_baixo=produtos_bh_baixo,
@@ -135,13 +139,13 @@ def func_dashboard():
     if 'usuario_id' not in session or session['tipo'] != 'funcionario':
         flash('Acesso negado!', 'error')
         return redirect(url_for('login'))
-    
+
     db = get_db()
     produtos = db.execute(
         'SELECT * FROM produtos WHERE clinica = ? ORDER BY nome',
         (session['clinica'],)
     ).fetchall()
-    
+
     return render_template('func_dashboard.html', 
                          produtos=produtos, 
                          clinica=session['clinica'])
@@ -151,24 +155,24 @@ def cadastro_produto():
     if 'usuario_id' not in session or session['tipo'] != 'admin':
         flash('Acesso negado!', 'error')
         return redirect(url_for('login'))
-    
+
     if request.method == 'POST':
         nome = request.form['nome']
         descricao = request.form['descricao']
         quantidade_atual = int(request.form['quantidade_atual'])
         quantidade_minima = int(request.form['quantidade_minima'])
         clinica = request.form['clinica']
-        
+
         db = get_db()
         db.execute('''
             INSERT INTO produtos (nome, descricao, quantidade_atual, quantidade_minima, clinica)
             VALUES (?, ?, ?, ?, ?)
         ''', (nome, descricao, quantidade_atual, quantidade_minima, clinica))
         db.commit()
-        
+
         flash(f'Produto cadastrado com sucesso na clínica {clinica}!', 'success')
         return redirect(url_for('admin_dashboard'))
-    
+
     return render_template('cadastro_produto.html')
 
 @app.route('/funcionario/retirar-produto/<int:produto_id>', methods=['GET', 'POST'])
@@ -176,39 +180,39 @@ def retirar_produto(produto_id):
     if 'usuario_id' not in session or session['tipo'] != 'funcionario':
         flash('Acesso negado!', 'error')
         return redirect(url_for('login'))
-    
+
     db = get_db()
     produto = db.execute(
         'SELECT * FROM produtos WHERE id = ? AND clinica = ?', 
         (produto_id, session['clinica'])
     ).fetchone()
-    
+
     if not produto:
         flash('Produto não encontrado ou não pertence à sua clínica!', 'error')
         return redirect(url_for('func_dashboard'))
-    
+
     if request.method == 'POST':
         quantidade_retirada = int(request.form['quantidade'])
-        
+
         if quantidade_retirada > produto['quantidade_atual']:
             flash('Quantidade indisponível no estoque!', 'error')
             return render_template('retirar_produto.html', produto=produto)
-        
+
         nova_quantidade = produto['quantidade_atual'] - quantidade_retirada
-        
+
         db.execute('UPDATE produtos SET quantidade_atual = ? WHERE id = ?', 
                   (nova_quantidade, produto_id))
-        
+
         db.execute('''
             INSERT INTO retiradas (produto_id, produto_nome, quantidade, usuario_nome, clinica)
             VALUES (?, ?, ?, ?, ?)
         ''', (produto_id, produto['nome'], quantidade_retirada, session['usuario_nome'], session['clinica']))
-        
+
         db.commit()
-        
+
         flash(f'Retirada de {quantidade_retirada} unidades de "{produto["nome"]}" realizada com sucesso!', 'success')
         return redirect(url_for('func_dashboard'))
-    
+
     return render_template('retirar_produto.html', produto=produto)
 
 @app.route('/admin/historico-retiradas')
@@ -216,7 +220,7 @@ def historico_retiradas():
     if 'usuario_id' not in session or session['tipo'] != 'admin':
         flash('Acesso negado!', 'error')
         return redirect(url_for('login'))
-    
+
     db = get_db()
     retiradas_bh = db.execute('''
         SELECT * FROM retiradas 
@@ -224,14 +228,14 @@ def historico_retiradas():
         ORDER BY data_retirada DESC
         LIMIT 50
     ''').fetchall()
-    
+
     retiradas_contagem = db.execute('''
         SELECT * FROM retiradas 
         WHERE clinica = "Contagem" 
         ORDER BY data_retirada DESC
         LIMIT 50
     ''').fetchall()
-    
+
     return render_template('historico_retiradas.html', 
                          retiradas_bh=retiradas_bh,
                          retiradas_contagem=retiradas_contagem)
